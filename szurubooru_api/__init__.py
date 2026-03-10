@@ -256,16 +256,17 @@ class Szurubooru:
         
         if file:
             files = {'content': file}
+            url = os.path.join(self.api_endpoint, "posts")
             data = self.request.post(url, data=data).json()
 
             if not self.is_error(data):
                 return data
         # TODO: Implement URL upload
 
-    def update_post(self, version, tags=None, safety=None, source=None, relations=None, notes=None, flags=None):
+    def update_post(self, post_id, version, tags=None, safety=None, source=None, relations=None, notes=None, flags=None):
         # TODO: Implement file updates
         """ 
-        Updates an existing post. Requires version. Returns a post object
+        Updates an existing post. Requires post_id, version. Returns a post object
         """
         data = {
             "version": version
@@ -285,6 +286,7 @@ class Szurubooru:
         if anonymous:
             data["flags"] = anonymous
 
+        url = os.path.join(self.api_endpoint, "post", str(post_id))
         data = self.request.put(url, data=data).json()
         if not self.is_error(data):
             return data
@@ -293,4 +295,295 @@ class Szurubooru:
         """
         Get a post. Requires id. Returns a post
         """
+        url = os.path.join(self.api_endpoint, "post", str(post_id))
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    def get_around_post(self, post_id):
+        """
+        Get the post IDs around a post. Requires post_id. Returns prev, and next post.
+        """
+        url = os.path.join(self.api_endpoint, "post", str(post_id), "around")
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    def delete_post(self, post_id, version):
+        """
+        Delete a post. Requires post_id, version. Returns None
+        """
+        data = {
+            "version": version
+        }
+        url = os.path.join(self.api_endpoint, "post", str(post_id))
+        data = self.request.delete(url, data=data).json()
+
+        self.is_error(data)
+
+    def merge_post(self, remove_name, remove_version, merge_version, merge_name, replace_content=False):
+        """
+        Merges two posts together. remove_name -> merge_name. Requires remove_name, remove_version, merge_version, merge_name. Returnes a post
+        """
+        data = {
+            "removeVersion": remove_version,
+            "remove": remove_name,
+            "mergeToVersion": merge_version,
+            "mergeTo": merge_name,
+            "replaceContent": replace_content
+        }
+        url = os.path.join(self.api_endpoint, "post-merge")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def rate_post(self, post_id, score):
+        """
+        Rates a post. Requires post_id, score. Score must be an integer value -1,0,1. Returns a post
+        """
+        data = {
+            "score": score
+        }
+        url = os.path.join(self.api_endpoint, "post", str(post_id), "score")
+        data = self.request.put(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def favourite_post(self, post_id):
+        """
+        Adds a post to your favourites. Returns a post
+        """
+
+        url = os.path.join(self.api_endpoint, "post", str(post_id), "favourite")
+        data = self.request.post(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    def remove_favourite_post(self, post_id)
+        """
+        Removes a post from your favourites. Requires post_id. Returns a post
+        """
+
+        url = os.path.join(self.api_endpoint, "post", str(post_id), "favourite")
+        data = self.request.delete(url).json()
+
+        if not self.is_error(data):
+            return data
+    
+    def get_featured_post(self):
+        """
+        Get featured post. Returns a post
+        """
+        url = os.path.join(self.api_endpoint, "featured-post")
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    def feature_post(self, post_id):
+        """
+        Feature a post. Requires post_id. Returns a post
+        """
+        data = {
+            "id": post_id
+        }
+        url = os.path.join(self.api_endpoint, "featured-post")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def reverse_image_search(self, file):
+        """
+        Performs a reverse image search. Requires file. File should be a file handler.
+        """
+        # TODO: Implement image search result
+        files = {
+            "content": file 
+        }
+
+        url = os.path.join(self.api_endpoint, "reverse-search")
+        data = self.request.post(url, files=files).json()
+
+        if not self.is_error(data):
+            return data
+
+    # Pools
+    def list_pool_categories(self):
+        """
+        Lists pool categories. Returnes a list of pool categories
+        """
+
+        url = os.path.join(self.api_endpoint, "pool-categories")
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+    
+    def create_pool_category(self, name, color):
+        """
+        Create a pool. Requires name, color. Returns a pool
+        """
+        data = {
+            "name": name,
+            "color": color
+        }
+
+        url = os.path.join(self.api_endpoint, "pool-categories")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def update_pool_category(self, version, name=None, color=None):
+        """
+        Update a pool cateogory. Requires version. Returns a pool category
+        """
+        data = {
+            "version": version
+        }
+        if name:
+            data["name"] = name
+        if color:
+            data["color"] = color
+
+        url = os.path.join(self.api_endpoint, "pool-categories")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def get_pool_category(self, name):
+        """
+        Get a pool category. Requires name. Returns a pool cateogry
+        """
+        url = os.path.join(self.api_endpoint, "pool-category", name)
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    def delete_pool_category(self, name, version):
+        """
+        Delete a pool category. Requires name, version. Returns None
+        """
+        data = {
+            "version": version
+        }
+        url = os.path.join(self.api_endpoint, "pool-category", name)
+        data = self.request.delete(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def set_default_pool_category(self, name):
+        """
+        Set a pool category as the default. Requires name. Returns a pool category
+        """
+        url = os.path.join(self.api_endpoint, "pool-category", name, "default")
+        data = self.request.put(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def list_pools(self, query="*", offset=0, limit=50):
+        # TODO: Implement category, sort, etc.
+        """
+        List pools given a query. Returns a paged list of pools. query can be '*' to list all pools.
+        """
+        url = os.path.join(self.api_endpoint, "pools", szurubooru_api.url.get_opts(query=query, offset=offset, limit=limit))
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return szurubooru_api.paged.PagedResult(
+                ctx = self,
+                search_func = self.list_posts,
+                offset = data["offset"],
+                limit = data["limit"],
+                total = data["total"],
+                results = data["results"]
+            )
+
+    def create_pool(self, names, category, description=None, posts=None):
+        """
+        Creates a new pool. Requires names, category. Returns a pool
+        """
+        data = {
+            "names": names,
+            "category": category
+        }
+        if description:
+            data["description"] = description
+        if posts:
+            data["posts"] = posts
+        url = os.path.join(self.api_endpoint, "pool")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+    
+    def update_pool(self, pool_id, version, names=None, category=None, description=None, posts=None):
+        """
+        Update an existing post. Requires pool_id, version. Returns a pool
+        """
+        data = {
+            "version": version
+        }
         
+        if names:
+            data["names"] = names
+        if category:
+            data["category"] = category
+        if description:
+            data["description"] = description
+        if posts:
+            data["posts"] = posts
+
+        url = os.path.join(self.api_endpoint, "pool", str(pool_id))
+        data = self.request.put(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    def get_pool(self, pool_id):
+        """
+        Get a pool. Requires pool_id. Returns a pool
+        """
+
+        url = os.path.join(self.api_endpoint, "pool", str(pool_id))
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    def delete_pool(self, pool_id):
+        """
+        Delete a pool. Requires pool_id. Returns None
+        """
+
+        url = os.path.join(self.api_endpoint, "pool", str(pool_id))
+        data = self.request.delete(url).json()
+
+        self.is_error(data)
+
+    def merge_pool(self, remove_name, remove_version, merge_version, merge_name):
+        """
+        Merges two pools together. remove_name -> merge_name. Requires remove_name, remove_version, merge_version, merge_name. Returnes a pool
+        """
+        data = {
+            "removeVersion": remove_version,
+            "remove": remove_name,
+            "mergeToVersion": merge_version,
+            "mergeTo": merge_name
+        }
+        url = os.path.join(self.api_endpoint, "pool-merge")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
