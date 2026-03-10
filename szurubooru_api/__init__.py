@@ -1,7 +1,7 @@
 import szurubooru_api.request
 import szurubooru_api.url
 import szurubooru_api.paged
-import os
+import os, json
 
 class Szurubooru:
     def __init__(self, api_endpoint, username=None, api_token=None):
@@ -14,6 +14,7 @@ class Szurubooru:
     def is_error(self, data):
         # TODO: Implement errors
         if "name" in data.keys():
+            print(data)
             return True
         return False
 
@@ -51,7 +52,7 @@ class Szurubooru:
         if not self.is_error(data):
             return data
 
-    def update_tag_category(self, name, version color=None, order=None):
+    def update_tag_category(self, name, version, color=None, order=None):
         """
         Updates a tag category. Requires name, version. Returns a tag category
         """
@@ -231,7 +232,7 @@ class Szurubooru:
                 results = data["results"]
             )
 
-    def create_post(self, tags, safety, source=None, relations=None, notes=None, flags=None, anonymous=None, file=None, url=None):
+    def create_post(self, tags, safety, source=None, relations=None, notes=None, flags=None, anonymous=None, file=None, url=None, content_token=None):
         """
         Creates a post. Requires tags, safety, file OR url. File should be file handler. Returns a post
         """
@@ -248,16 +249,14 @@ class Szurubooru:
         if flags:
             data["flags"] = flags
         if anonymous:
-            data["flags"] = anonymous
+            data["anonymous"] = anonymous
+        if content_token:
+            data["contentToken"] = content_token
 
-        if not file and not url:
-            # TODO: Error here
-            return False
-        
-        if file:
-            files = {'content': file}
+        if content_token:
             url = os.path.join(self.api_endpoint, "posts")
-            data = self.request.post(url, data=data).json()
+            # Not sure why but this spesifically needs to be in string first
+            data = self.request.post(url, data=json.dumps(data)).json()
 
             if not self.is_error(data):
                 return data
@@ -364,7 +363,7 @@ class Szurubooru:
         if not self.is_error(data):
             return data
 
-    def remove_favourite_post(self, post_id)
+    def remove_favourite_post(self, post_id):
         """
         Removes a post from your favourites. Requires post_id. Returns a post
         """
@@ -586,4 +585,29 @@ class Szurubooru:
 
         if not self.is_error(data):
             return data
+    
+    def get_upload_token(self, file):
+        """
+        Get the upload token for a given file. Requires file. File should be a file handler. Returns a token
+        """
+        file_name = os.path.basename(file.name)
+        file_ext = file_name.split(".")[-1].lower()
+        mime_types = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'mp4': 'video/mp4',
+            'webm': 'video/webm' 
+        }
+        mime_type = mime_types[file_ext] if file_ext in mime_types.keys() else "application/octet-stream"
 
+        files = {
+            "content": (file_name, file.read(), mime_type)
+        }
+        url = os.path.join(self.api_endpoint, "uploads")
+        data = self.request.post(url, files=files).json()
+
+        if not self.is_error(data):
+            return data["token"]
