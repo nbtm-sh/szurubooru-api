@@ -184,3 +184,113 @@ class Szurubooru:
         data = self.request.delete(url, data=data).json()
 
         self.is_error(data)
+
+    def merge_tag(self, remove_name, remove_version, merge_version, merge_name):
+        """
+        Merges two tags together. remove_name -> merge_name. Requires remove_name, remove_version, merge_version, merge_name. Returnes a tag
+        """
+        data = {
+            "removeVersion": remove_version,
+            "remove": remove_name,
+            "mergeToVersion": merge_version,
+            "mergeTo": merge_name
+        }
+        url = os.path.join(self.api_endpoint, "tag-merge")
+        data = self.request.post(url, data=data).json()
+
+        if not self.is_error(data):
+            return data
+
+    # Tag siblings
+    def get_tag_siblings(self, name):
+        """
+        Get tag siblings. Requires name. Returns tag siblings
+        """
+        url = os.path.join(self.api_endpoint, "tag-siblings", name)
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return data
+
+    # Posts
+    def list_posts(self, query="*", offset=0, limit=50):
+        # TODO: Implement category, sort, etc.
+        """
+        List posts given a query. Returns a paged list of posts. query can be '*' to list all posts.
+        """
+        url = os.path.join(self.api_endpoint, "posts", szurubooru_api.url.get_opts(query=query, offset=offset, limit=limit))
+        data = self.request.get(url).json()
+
+        if not self.is_error(data):
+            return szurubooru_api.paged.PagedResult(
+                ctx = self,
+                search_func = self.list_posts,
+                offset = data["offset"],
+                limit = data["limit"],
+                total = data["total"],
+                results = data["results"]
+            )
+
+    def create_post(self, tags, safety, source=None, relations=None, notes=None, flags=None, anonymous=None, file=None, url=None):
+        """
+        Creates a post. Requires tags, safety, file OR url. File should be file handler. Returns a post
+        """
+        data = {
+            "tags": tags,
+            "safety": safety
+        }
+        if source:
+            data["source"] = source
+        if relations:
+            data["relations"] = relations
+        if notes:
+            data["notes"] = notes
+        if flags:
+            data["flags"] = flags
+        if anonymous:
+            data["flags"] = anonymous
+
+        if not file and not url:
+            # TODO: Error here
+            return False
+        
+        if file:
+            files = {'content': file}
+            data = self.request.post(url, data=data).json()
+
+            if not self.is_error(data):
+                return data
+        # TODO: Implement URL upload
+
+    def update_post(self, version, tags=None, safety=None, source=None, relations=None, notes=None, flags=None):
+        # TODO: Implement file updates
+        """ 
+        Updates an existing post. Requires version. Returns a post object
+        """
+        data = {
+            "version": version
+        }
+        if tags:
+            data["tags"] = tags
+        if safety:
+            data["safety"] = safety
+        if source:
+            data["source"] = source
+        if relations:
+            data["relations"] = relations
+        if notes:
+            data["notes"] = notes
+        if flags:
+            data["flags"] = flags
+        if anonymous:
+            data["flags"] = anonymous
+
+        data = self.request.put(url, data=data).json()
+        if not self.is_error(data):
+            return data
+
+    def get_post(self, post_id):
+        """
+        Get a post. Requires id. Returns a post
+        """
+        
