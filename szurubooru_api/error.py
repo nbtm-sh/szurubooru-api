@@ -1,0 +1,2 @@
+class InsufficientPrivileges(Exception):
+    pass
