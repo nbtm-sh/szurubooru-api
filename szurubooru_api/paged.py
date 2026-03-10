@@ -1,7 +1,7 @@
 class PagedResult:
-    def __init__(self, ctx, search_func query=None, offset=None, limit=None, total=None, results=None):
+    def __init__(self, ctx, search_func, query=None, offset=None, limit=None, total=None, results=None):
         self.ctx = ctx
-        self.search_func = self.search_func # Should be any function that takes in `query`, `offset`, `limit` and returns a paged result. ctx will be passed as self
+        self.search_func = search_func # Should be any function that takes in `query`, `offset`, `limit` and returns a paged result. ctx will be passed as self
         self.query = query
         self.offset = int(offset)
         self.limit = int(limit)
