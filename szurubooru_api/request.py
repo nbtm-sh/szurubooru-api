@@ -1,5 +1,5 @@
 import szurubooru_api.auth
-import requests
+import requests, json
 
 class Request:
     def __init__(self, username, api_token, user_agent="szurubooru-api (github: nbtm-sh/szurubooru-api)"):
@@ -19,6 +19,9 @@ class Request:
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
+        if files:
+            del headers["Content-Type"]
+            return requests.post(url, headers=headers, files=files)
         return requests.post(url, headers=headers, data=data, files=files)
 
     def put(self, data=None):
